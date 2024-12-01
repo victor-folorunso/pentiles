@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pentiles Game</title>
+
+  <style type="text/css">
+    body {
+      margin: 0;
+      height: 100vh;
+      width: 100vw;
+      background-image:url("/storage/emulated/0/Pictures/facebook/FB_IMG_17042700824936379.jpg");
+      
+    }
+
+    .lane {
+      border-right: 0.1px solid black;
+      border-left: 0.1px solid black;
+      border-collapse:collapse;
+      border-collapse: collapse;
+      position: relative;
+ 
+    }
+
+    #container {
+      margin: none;
+      display: grid;
+      grid-template-columns: repeat(5, 20vw);
+      height: 100%;
+      overflow-y: hidden;
+      
+    }
+
+    .tile {
+      width: 95%;
+      height: 50%;
+      margin: 2%;
+      margin-top: 0vh;
+      margin-bottom: 0vh;
+      border-radius: 5px;
+      position: absolute;
+      background-color:yellow;
+      box-shadow:2px 2px black;
+    }
+   
+    #start {
+      width: 25vw;
+      height: 10vw;
+      border-radius:30px  30px;
+      position: fixed;
+      top:70vh;
+      left:70vw;
+      background-color: #B2074D;
+      border:none;
+      text-transform:capitalize;
+      font-weight:bolder;
+      font-size:5vw;
+    }
+   
+    #bgFail {
+    	position:fixed;
+    	top:0px;
+    	left:0px;
+        display:none; /*flex*/
+    	background-color:rgba(0,0,0,0.3);
+    	width:100%;
+    	height:100%;
+    	align-items:center;
+    	justify-content:center;
+    }
+   
+    .failPopup {
+    	display:block;
+    	background-color:white;
+    	width:60vw;
+    	height:40%;
+    	border-radius:4px;
+    	box-shadow:2vw 2vw black;
+    	text-transform:uppercase;
+    	text-align:center;
+    }
+   
+    .failPopup span {
+    	color:red;
+    	font-weight:bolder;
+    	font-size:10vw;
+    	text-shadow:2px 2px black;
+    	position:relative;
+    	top:30%;
+    }
+    .failPopup  button {
+    	background-color:rgb(10,250,10);
+    	position:relative;
+    	top:50%;
+    	width:40%;
+    	border:2px solid blue;
+    	border-radius:20px;
+    	font-weight:bolder;
+    	text-transform:uppercase;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="container" onclick="containerClicked()">
+    <div class="lane" id="lane1"></div>
+    <div class="lane" id="lane2"></div>
+    <div class="lane" id="lane3"></div>
+    <div class="lane" id="lane4"></div>
+    <div class="lane" id="lane5"></div>
+    <button id="start" >start</button>
+  </div>
+ 
+  <div id="bgFail" >
+  	<div class="failPopup" >
+  		<span>you fail</span>
+  		<button>home</button> <button id="restart" >restart</button>
+  	</div>
+  </div>
+  
+
+  <script type="text/javascript">
+    
+    let prevIndex = "";
+    let tileIndex = 1;
+    let pausedGame = false
+    let notplayingSong = true
+  
+    const tileSpacing = 400;
+    const numOfTiles = 200;
+    const animeStartPosition = -50;
+    const animaeStopPosition = 150;
+    const animaeDelay = 60;
+    
+	const startBtn = document.getElementById("start")
+	const failpop = document.getElementById("bgFail")
+	const conta = document.getElementById("container")
+	
+	const audio = new Audio('/storage/emulated/0/Download/Waiting Music.mp3');
+
+    function rand(list) {
+      while (true) {
+        const randomIndex = Math.floor(Math.random() * list.length);
+        if (prevIndex !== randomIndex) {
+          prevIndex = randomIndex;
+          item = list[randomIndex];
+          return item;
+        }
+      }
+    }
+
+    function createTiles() {
+      const lanes = ["1", "2", "3", "4","5"];
+      const randLane = rand(lanes);
+      const lane = document.getElementById("lane" + randLane);
+      const div = document.createElement("div");
+
+      div.setAttribute("class", "tile");
+
+      const firstChild = lane.firstChild;
+      if (firstChild) {
+        lane.insertBefore(div, firstChild);
+      } else {
+        lane.appendChild(div);
+      }
+      
+	  div.addEventListener("pointerdown", function () {
+	  div.style.backgroundColor = "red";
+	  tileClicked();
+	  });
+	 
+	 /* if (randDualTiles()){
+	  	const randDualLanesgen = randDual(randLane)
+	  	const randDualLanes = document.getElementById("lane" + randDualLanesgen)
+	  	const div2 = document.createElement("div");
+	  	
+	  	div2.setAttribute("class", "tile");
+	  	
+	  	const firstChild2 = randDualLanes.firstChild;
+	  	if (firstChild2) {
+	  	randDualLanes.insertBefore(div2, firstChild2);
+	  	} else {
+	  	randDualLanes.appendChild(div2);
+	  	}
+	  	
+	  	div2.addEventListener("pointerdown", function () {
+	  	div2.style.backgroundColor = "green";
+	  	tileClicked();
+	  	});
+	  	
+	  	animate(div2)
+
+	  }*/
+      animate(div);
+      tileIndex++;
+    }
+
+    function sleep(time) {
+      return new Promise(resolve => setTimeout(resolve, time));
+    }
+
+    async function animate(item) {
+      let i = animeStartPosition;
+     
+      while (i < animaeStopPosition) {
+	    item.style.top = i + "%";
+	    await sleep(animaeDelay);
+	    if((item.style.top == "90%") && (item.style.backgroundColor !== "red")){
+	    	//item.stylele.backgroundColor = "none"
+	    	toggleFailpopup("show")
+	    }	
+	   
+	    if(pausedGame == false){
+		    i += 10
+	    }
+	    
+      }
+      item.remove()
+    }
+
+    async function createTilesWithDelay() {
+	  let i = 0;
+      while (i < numOfTiles) {
+         createTiles();  
+         await sleep(tileSpacing);
+        
+         if(pausedGame == false){
+         	i++
+         }
+         
+      }
+    }
+	
+	function randDual(lane){
+		if (lane == "1"){return "3";}
+		else if (lane == "2"){return "4";}
+		else if (lane == "3"){return "5";}
+		else if (lane == "4"){return "2";}
+		else if (lane == "5"){return "3";}
+	}
+    function containerClicked() {
+      console.log("container clicked!");
+    }
+
+    function tileClicked() {
+      console.log("tile clicked");    
+      playSong()
+    }
+   
+    function playSong(){
+    	if(notplayingSong){	
+    		audio.play();
+    		notplayingSong = false
+    	}
+    }
+
+	function toggleFailpopup(strin){
+		if(strin == "show"){
+			failpop.style.display = "flex"
+		}else if(strin == "hide"){
+			failpop.style.display = "none"
+		}
+		
+		pausedGame = true
+		console.log("loose")
+		stopSong()		
+		
+	}
+	function stopSong() {
+		audio.pause();
+		audio.currentTime = 0;
+		notplayingSong = true;
+	}
+	
+	function randDualTiles(){
+		const combinations = [3,1,2,4,5,7,6,8,9,0,9,8,6,8,7,8,8,8,8,8,8,8,8,5,8,9,9]
+		const item = rand(combinations)
+		if(item == 3){
+			return true;
+		}else{
+			return false
+		}
+	}
+  	
+  	startBtn.addEventListener("pointerdown",function(){
+  	startBtn.style.display = "none"
+  	createTilesWithDelay();
+  	})
+  	
+  </script>
+</body>
+
+</html>
